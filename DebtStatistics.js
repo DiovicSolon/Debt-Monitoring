@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+
 
 const DebtStatistics = ({ debts, onClose }) => {
   const calculateTotalDebt = () => {
@@ -10,57 +11,76 @@ const DebtStatistics = ({ debts, onClose }) => {
       .toFixed(2);
   };
 
+
   const calculatePaidDebts = () => debts.filter((debt) => debt.status === 'paid').length;
 
   const calculatePendingDebts = () => debts.filter((debt) => debt.status === 'pending').length;
 
   // Graph data
   const chartData = {
-    labels: debts.map((debt, index) => `Debt ${index + 1}`), // X-axis labels
+   
     datasets: [
       {
-        data: debts.map((debt) => parseFloat(debt.amount || 0)), // Y-axis values
-        color: () => `#bb86fc`, // Line color
+        data: debts.map((debt) => parseFloat(debt.amount || 0)),
+        color: () => `rgba(75, 192, 192, 1)`,
       },
     ],
+  };
+
+  const handleBackPress = () => {
+    if (onClose && typeof onClose === 'function') {
+      onClose(); // Notify the parent to close the DebtStatistics component
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Debt Statistics</Text>
 
-      {/* Graph */}
-      <LineChart
-        data={chartData}
-        width={Dimensions.get('window').width - 40} // Screen width minus padding
-        height={220}
-        yAxisSuffix="₱"
-        chartConfig={{
-          backgroundColor: '#1e1e1e',
-          backgroundGradientFrom: '#1e1e1e',
-          backgroundGradientTo: '#1e1e1e',
-          decimalPlaces: 2, // Rounded to 2 decimal places
-          color: (opacity = 1) => `rgba(187, 134, 252, ${opacity})`,
-          labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-          style: {
-            borderRadius: 8,
-          },
-        }}
-        bezier
-        style={styles.chart}
-      />
+      {/* Scrollable Graph */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chartContainer}>
+        <LineChart
+          data={chartData}
+          width={Math.max(400, Dimensions.get('window').width)}
+          height={250}
+          yAxisSuffix="₱"
+          chartConfig={chartConfig}
+          bezier
+          style={styles.chart}
+        />
+      </ScrollView>
 
       {/* Statistics */}
-      <Text style={styles.stat}>Total Debt Amount: ₱{calculateTotalDebt()}</Text>
-      <Text style={styles.stat}>Paid Debts: {calculatePaidDebts()}</Text>
-      <Text style={styles.stat}>Pending Debts: {calculatePendingDebts()}</Text>
-
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={onClose}>
+      <View style={styles.statsContainer}>
+        <Text style={styles.stat}>Total Debt Amount: <Text style={styles.highlight}>₱{calculateTotalDebt()}</Text></Text>
+        <Text style={styles.stat}>Paid Debts: <Text style={styles.highlight}>{calculatePaidDebts()}</Text></Text>
+        <Text style={styles.stat}>Pending Debts: <Text style={styles.highlight}>{calculatePendingDebts()}</Text></Text>
+       
+      <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
     </View>
+      </View>
+
+    
   );
+};
+
+const chartConfig = {
+  backgroundColor: '#1e1e1e',
+  backgroundGradientFrom: '#232323',
+  backgroundGradientTo: '#3a3a3a',
+  decimalPlaces: 2,
+  color: (opacity = 1) => `rgba(75, 192, 192, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  style: {
+    borderRadius: 8,
+  },
+  propsForDots: {
+    r: '5',
+    strokeWidth: '2',
+    stroke: '#1e1e1e',
+  },
 };
 
 const styles = StyleSheet.create({
@@ -70,22 +90,38 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#bb86fc',
+    color: '#4bc0c0',
+    textAlign: 'center',
     marginBottom: 20,
+  },
+  chartContainer: {
+    marginVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#2a2a2a',
+    padding: 10,
+  },
+  chart: {
+    borderRadius: 8,
+  },
+  statsContainer: {
+    marginTop: 20,
+    backgroundColor: '#2a2a2a',
+    padding: 15,
+    borderRadius: 8,
   },
   stat: {
     fontSize: 16,
     color: '#ffffff',
     marginBottom: 10,
   },
-  chart: {
-    marginVertical: 10,
-    borderRadius: 8,
+  highlight: {
+    color: '#4bc0c0',
+    fontWeight: 'bold',
   },
   backButton: {
-    backgroundColor: '#bb86fc',
+    backgroundColor: '#4bc0c0',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
